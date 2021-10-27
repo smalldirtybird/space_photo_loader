@@ -10,11 +10,28 @@ Easy way to download some beautiful pictures from SpaceX and NASA
 Create .env file in directory with main.py file(use Notepad++) and add the string `NASA_TOKEN='your_nasa_api_token'` to it (without any quotes).
 
 ## How to use:
-Just run main.py in root directory. You'll see the message "Done! Check the "image_folder" for results!" when script will be finished.
-
+Run `main.py` with console. Use `cd` command if you need to change directory:
+```
+D:\>cd D:\learning\python\api_services\space_photo_loader
+D:\learning\python\api_services\space_photo_loader>python main.py
+```
 ## Available options
-If you want to get different results, you can change settings in `"if __name__"` block:`
-image_folder - this variable contains path to downloaded images;
-fetch_spacex_last_launch() - 2nd argument in this function is number of SpaseX launch;
-fetch_nasa_apod() - 2nd argument in this function is number of random space pictures;
-fetch_nasa_epic() - 2nd argument in this function indicates how many days ago photos of the Earth were taken.
+If you want to get different results, you can use optional arguments in console with running main.py.
+Get available options with `-h` argument:
+```
+D:\learning\python\api_services\space_photo_loader>python main.py -h
+usage: main.py [-h] [-l LAUNCH_NUMBER] [-c COUNT] [-d DAYS_AGO] [-dir DIRECTORY]
+
+Загрузите красивые фото космоса от SpaceX и NASA
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LAUNCH_NUMBER, --launch_number LAUNCH_NUMBER
+                        Номер запуска SpaseX
+  -c COUNT, --count COUNT
+                        Кол-во фотографий NASA APOD
+  -d DAYS_AGO, --days_ago DAYS_AGO
+                        Как давно сделаны фото NASA EPIC
+  -dir DIRECTORY, --directory DIRECTORY
+                        Путь к папке для скачанных картинок
+```

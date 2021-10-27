@@ -115,3 +115,4 @@ dmypy.json
 
 # Images
 images/
+.idea/
