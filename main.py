@@ -116,6 +116,7 @@ if __name__ == '__main__':
     fetch_spacex_last_launch(image_folder, args.launch_number)
     fetch_nasa_apod(image_folder, nasa_api_key, args.count)
     fetch_nasa_epic(image_folder, nasa_api_key, args.days_ago)
-    print(f'Done! Check the "{image_folder}" folder for results!')
     bot = telegram.Bot(token=telegram_token)
-    bot.send_message(text='Hi John!', chat_id=telegram_chat_id)
+    media_1 = telegram.files.inputmedia.InputMediaPhoto(
+        media=open('D:/learning/python/api_services/space_photo_loader/images/spacex/spacex0.jpg', 'rb'))
+    bot.send_media_group(chat_id=telegram_chat_id, media=[media_1])
