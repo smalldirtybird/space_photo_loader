@@ -95,9 +95,18 @@ def fetch_nasa_epic(folder, api_key, days_ago):
         get_image(link, path)
 
 
-if __name__ == '__main__':
+def post_to_telegram_channel(token, chat_id):
+    bot = telegram.Bot(token=token)
+    media_1 = telegram.files.inputmedia.InputMediaPhoto(
+        media=open('D:/learning/python/api_services/space_photo_loader/images/spacex/spacex0.jpg', 'rb'))
+    bot.send_media_group(chat_id=chat_id, media=[media_1])
+
+
+def get_arguments_from_console():
     parser = argparse.ArgumentParser(
-        description='Загрузите красивые фото космоса от SpaceX и NASA')
+        description='Загрузите красивые фото космоса от SpaceX и NASA в Телеграм-канал')
+    parser.add_argument(
+        'telegram_chat_id', default="@BeautifulSpacePhoto", help='id Телеграм-канала')
     parser.add_argument(
         '-l', '--launch_number', default=16, help='Номер запуска SpaseX')
     parser.add_argument(
@@ -108,15 +117,16 @@ if __name__ == '__main__':
         '-dir', '--directory', default='images',
         help='Путь к папке для скачанных картинок')
     args = parser.parse_args()
+    return args.telegram_chat_id, args.directory, args.launch_number, args.count, args.days_ago
+
+
+if __name__ == '__main__':
+    chat_id, image_folder, launch_number, count_apod, epic_photo_days_ago = get_arguments_from_console()
     load_dotenv()
     nasa_api_key = os.environ['NASA_TOKEN']
     telegram_token = os.environ['TELEGRAM_TOKEN']
-    telegram_chat_id = '@BeautifulSpacePhoto'
-    image_folder = args.directory
-    fetch_spacex_last_launch(image_folder, args.launch_number)
-    fetch_nasa_apod(image_folder, nasa_api_key, args.count)
-    fetch_nasa_epic(image_folder, nasa_api_key, args.days_ago)
-    bot = telegram.Bot(token=telegram_token)
-    media_1 = telegram.files.inputmedia.InputMediaPhoto(
-        media=open('D:/learning/python/api_services/space_photo_loader/images/spacex/spacex0.jpg', 'rb'))
-    bot.send_media_group(chat_id=telegram_chat_id, media=[media_1])
+    fetch_spacex_last_launch(image_folder, launch_number)
+    fetch_nasa_apod(image_folder, nasa_api_key, count_apod)
+    fetch_nasa_epic(image_folder, nasa_api_key, epic_photo_days_ago)
+    post_to_telegram_channel(telegram_token, chat_id)
+    get_files_from_folder(image_folder)
