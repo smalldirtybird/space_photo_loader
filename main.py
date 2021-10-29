@@ -5,6 +5,7 @@ import urllib
 import datetime
 import argparse
 import telegram
+import time
 
 
 def get_image(url, path):
@@ -95,11 +96,22 @@ def fetch_nasa_epic(folder, api_key, days_ago):
         get_image(link, path)
 
 
-def post_to_telegram_channel(token, chat_id):
+def post_to_telegram_channel(token, chat_id, folder):
     bot = telegram.Bot(token=token)
-    media_1 = telegram.files.inputmedia.InputMediaPhoto(
-        media=open('D:/learning/python/api_services/space_photo_loader/images/spacex/spacex0.jpg', 'rb'))
-    bot.send_media_group(chat_id=chat_id, media=[media_1])
+    for sub_folder in os.listdir(folder):
+        sub_folder_paths = f'{folder}/{sub_folder}'
+        sub_folder_content = os.listdir(sub_folder_paths)
+        media_group = []
+        print(len(media_group))
+        for image in sub_folder_content:
+            if len(media_group) < 10:
+                image_path = f'{sub_folder_paths}/{image}'
+                media = telegram.files.inputmedia.InputMediaPhoto(media=open(image_path, 'rb'))
+                media_group.append(media)
+                print(len(media_group))
+        print(media_group)
+        bot.send_media_group(chat_id=chat_id, media=media_group)
+        time.sleep(10)
 
 
 def get_arguments_from_console():
@@ -121,7 +133,7 @@ def get_arguments_from_console():
 
 
 if __name__ == '__main__':
-    chat_id, image_folder, launch_number, count_apod, epic_photo_days_ago = get_arguments_from_console()
+    telegram_chat_id, image_folder, launch_number, count_apod, epic_photo_days_ago = get_arguments_from_console()
     load_dotenv()
     nasa_api_key = os.environ['NASA_TOKEN']
     telegram_token = os.environ['TELEGRAM_TOKEN']
@@ -129,4 +141,4 @@ if __name__ == '__main__':
     fetch_nasa_apod(image_folder, nasa_api_key, count_apod)
     fetch_nasa_epic(image_folder, nasa_api_key, epic_photo_days_ago)
     post_to_telegram_channel(telegram_token, chat_id)
-    get_files_from_folder(image_folder)
+    post_to_telegram_channel(telegram_token, telegram_chat_id, image_folder)
