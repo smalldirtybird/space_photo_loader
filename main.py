@@ -8,6 +8,24 @@ import telegram
 import time
 import shutil
 import random
+from PIL import Image
+
+
+def get_file_size(filepath):
+    size_in_bytes = os.path.getsize(filepath)
+    size_in_megabytes = size_in_bytes / (1024 ** 2)
+    return size_in_megabytes
+
+
+def big_file_compression(filepath, original_file_size, max_size):
+    coefficient = max_size / original_file_size
+    original_image = Image.open(filepath)
+    print(get_file_size(filepath))
+    original_width, original_height = original_image.size
+    requirement_resolution = (round(original_width * coefficient), round(original_height * coefficient))
+    requirement_image = original_image.resize(requirement_resolution, Image.ANTIALIAS)
+    requirement_image.save(filepath, optimize=True, quality=95)
+    print(get_file_size(filepath))
 
 
 def write_string_into_log(message):
@@ -29,6 +47,10 @@ def get_image(url, path):
     response.raise_for_status()
     with open(path, 'wb') as file:
         file.write(response.content)
+    original_file_size =  get_file_size(path)
+    max_file_size = 20
+    if original_file_size > max_file_size:
+        big_file_compression(path, original_file_size, max_file_size)
 
 
 def get_random_flight_number():
