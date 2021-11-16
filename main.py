@@ -219,17 +219,12 @@ def get_arguments():
     return args_dict
 
 
-def wait_before_nex_post(time_in_seconds=86400):
-    time.sleep(time_in_seconds)
-
-
 if __name__ == '__main__':
     arguments = get_arguments()
     load_dotenv()
     nasa_api_key = os.environ['NASA_TOKEN']
     telegram_token = os.environ['TELEGRAM_TOKEN']
     arguments['telegram_chat_id'] = os.environ['TELEGRAM_CHAT_ID']
-    delay = int(os.environ['DELAY'])
     while True:
         try:
             fetch_spacex_last_launch(arguments, telegram_token)
@@ -244,4 +239,13 @@ if __name__ == '__main__':
         except Exception as e:
             get_exception('fetch_nasa_epic function', e)
         shutil.rmtree(arguments['directory'])
-        wait_before_nex_post(delay)
+        try:
+            time.sleep(int(os.environ['DELAY']))
+        except KeyError:
+            write_string_into_log(f'''
+                Variable "DELAY" not found in .env file.
+                Default time of delay between script running is 24 hours.
+                If need to set another delay value,
+                check README.md for instructions.
+                ''')
+            time.sleep(10)
