@@ -20,7 +20,6 @@ def get_file_size(filepath):
 def big_file_compression(filepath, original_file_size, max_size):
     coefficient = max_size / original_file_size
     original_image = Image.open(filepath)
-    print(get_file_size(filepath))
     original_width, original_height = original_image.size
     requirement_resolution = (
         round(original_width * coefficient),
@@ -29,7 +28,6 @@ def big_file_compression(filepath, original_file_size, max_size):
     requirement_image = original_image.resize(
         requirement_resolution, Image.ANTIALIAS)
     requirement_image.save(filepath, optimize=True, quality=95)
-    print(get_file_size(filepath))
 
 
 def write_string_into_log(message):
@@ -46,7 +44,6 @@ def get_exception(location, exception):
     with open('log.txt', 'a') as logfile:
         time_stamp = datetime.datetime.now()
         logfile.write(f'{time_stamp}. {message}\n')
-    print(message)
 
 
 def get_image(url, path):
@@ -94,14 +91,11 @@ def fetch_spacex_last_launch(settings, token):
         links = get_spacex_links(flight_number)
     write_string_into_log(f'received {len(links)} spacex links')
     folder_number = 0
-    num_of_link = 0
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
             spacex_folder, folder_number)
         path = f'{sub_folder}/{filename}{link_number}.jpg'
         get_image(link, path)
-        num_of_link += 1
-    write_string_into_log(f'{num_of_link} images has downloaded')
     post_to_telegram_channel(
         token, settings['telegram_chat_id'], spacex_folder)
 
@@ -134,7 +128,6 @@ def fetch_nasa_apod(settings, api_key, token):
     links = get_nasa_apod_links(settings['image_quantity'], api_key)
     write_string_into_log(f'received {len(links)} apod links')
     folder_number = 0
-    num_of_link = 0
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
             nasa_apod_folder, folder_number)
@@ -142,8 +135,6 @@ def fetch_nasa_apod(settings, api_key, token):
         if image_extension != '':
             path = f'{sub_folder}/{filename}{link_number}{image_extension}'
             get_image(link, path)
-            num_of_link += 1
-    write_string_into_log(f'{num_of_link} images has downloaded')
     post_to_telegram_channel(
         token, settings['telegram_chat_id'], nasa_apod_folder)
 
@@ -179,14 +170,11 @@ def fetch_nasa_epic(settings, api_key, token):
     links = get_nasa_epic_links(api_key, settings['days_ago'])
     write_string_into_log(f'received {len(links)} epic links')
     folder_number = 0
-    num_of_link = 0
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
             nasa_epic_folder, folder_number)
         path = f'{sub_folder}/{filename}{link_number}.png'
         get_image(link, path)
-        num_of_link += 1
-    write_string_into_log(f'{num_of_link} images has downloaded')
     post_to_telegram_channel(
         token, settings['telegram_chat_id'], nasa_epic_folder)
 
@@ -231,9 +219,8 @@ def get_arguments():
     return args_dict
 
 
-def wait_before_nex_post(time_in_seconds=10):
+def wait_before_nex_post(time_in_seconds=86400):
     time.sleep(time_in_seconds)
-    print(f'finish, next start in {time_in_seconds} seconds')
 
 
 if __name__ == '__main__':
@@ -243,21 +230,18 @@ if __name__ == '__main__':
     telegram_token = os.environ['TELEGRAM_TOKEN']
     arguments['telegram_chat_id'] = os.environ['TELEGRAM_CHAT_ID']
     delay = int(os.environ['DELAY'])
-    count = 1
     while True:
-        print(f'Sending image pack #{count} at {datetime.datetime.now()}')
         try:
             fetch_spacex_last_launch(arguments, telegram_token)
         except Exception as e:
-            get_exception('Spacex part', e)
+            get_exception('fetch_spacex_last_launch function', e)
         try:
             fetch_nasa_apod(arguments, nasa_api_key, telegram_token)
         except Exception as e:
-            get_exception('Apod part', e)
+            get_exception('fetch_nasa_apod function', e)
         try:
             fetch_nasa_epic(arguments, nasa_api_key, telegram_token)
         except Exception as e:
-            get_exception('Epic part', e)
+            get_exception('fetch_nasa_epic function', e)
         shutil.rmtree(arguments['directory'])
         wait_before_nex_post(delay)
-        count += 1
