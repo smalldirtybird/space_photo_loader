@@ -75,7 +75,7 @@ def get_spacex_links(launch_number):
 
 
 def check_image_quantity(folder, folder_number):
-    sub_folder = f'{folder}/{folder_number}'
+    sub_folder = os.path.join(folder, str(folder_number))
     os.makedirs(sub_folder, exist_ok=True)
     if len(os.listdir(sub_folder)) == 9:
         folder_number += 1
@@ -83,7 +83,7 @@ def check_image_quantity(folder, folder_number):
 
 
 def fetch_spacex_last_launch(settings, token):
-    spacex_folder = f"{settings['directory']}/spacex"
+    spacex_folder = os.path.join(settings['directory'], 'spacex')
     filename = 'spacex'
     flight_number = get_random_flight_number()
     links = []
@@ -94,7 +94,7 @@ def fetch_spacex_last_launch(settings, token):
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
             spacex_folder, folder_number)
-        path = f'{sub_folder}/{filename}{link_number}.jpg'
+        path = os.path.join(sub_folder, f'{filename}{link_number}.jpg')
         get_image(link, path)
     post_to_telegram_channel(
         token, settings['telegram_chat_id'], spacex_folder)
@@ -123,7 +123,7 @@ def get_image_extension(url):
 
 
 def fetch_nasa_apod(settings, api_key, token):
-    nasa_apod_folder = f"{settings['directory']}/nasa_apod"
+    nasa_apod_folder = os.path.join(settings['directory'], 'nasa_apod')
     filename = 'nasa_apod'
     links = get_nasa_apod_links(settings['image_quantity'], api_key)
     write_string_into_log(f'received {len(links)} apod links')
@@ -133,7 +133,8 @@ def fetch_nasa_apod(settings, api_key, token):
             nasa_apod_folder, folder_number)
         image_extension = get_image_extension(link)
         if image_extension != '':
-            path = f'{sub_folder}/{filename}{link_number}{image_extension}'
+            path = os.path.join(sub_folder,
+                                f'{filename}{link_number}{image_extension}')
             get_image(link, path)
     post_to_telegram_channel(
         token, settings['telegram_chat_id'], nasa_apod_folder)
@@ -165,7 +166,7 @@ def get_nasa_epic_links(api_key, days_ago):
 
 
 def fetch_nasa_epic(settings, api_key, token):
-    nasa_epic_folder = f"{settings['directory']}/nasa_epic"
+    nasa_epic_folder = os.path.join(settings['directory'], 'nasa_epic')
     filename = 'nasa_epic'
     links = get_nasa_epic_links(api_key, settings['days_ago'])
     write_string_into_log(f'received {len(links)} epic links')
@@ -173,7 +174,7 @@ def fetch_nasa_epic(settings, api_key, token):
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
             nasa_epic_folder, folder_number)
-        path = f'{sub_folder}/{filename}{link_number}.png'
+        path = os.path.join(sub_folder, f'{filename}{link_number}.png')
         get_image(link, path)
     post_to_telegram_channel(
         token, settings['telegram_chat_id'], nasa_epic_folder)
@@ -182,16 +183,16 @@ def fetch_nasa_epic(settings, api_key, token):
 def post_to_telegram_channel(token, chat_id, folder):
     bot = telegram.Bot(token=token)
     for sub_folder in os.listdir(folder):
-        sub_folder_paths = f'{folder}/{sub_folder}'
+        sub_folder_paths = os.path.join(folder, sub_folder)
         sub_folder_content = os.listdir(sub_folder_paths)
         media_group = []
         for image in sub_folder_content:
-            image_path = f'{sub_folder_paths}/{image}'
+            image_path = os.path.join(sub_folder_paths, image)
             media = telegram.files.inputmedia.InputMediaPhoto(
                 media=open(image_path, 'rb'))
             media_group.append(media)
         bot.send_media_group(chat_id=chat_id, media=media_group)
-        write_string_into_log(f'{folder}/{sub_folder} successfully uploaded')
+        write_string_into_log(f'{sub_folder_paths} successfully uploaded')
         time.sleep(60)
 
 
@@ -238,7 +239,10 @@ if __name__ == '__main__':
             fetch_nasa_epic(arguments, nasa_api_key, telegram_token)
         except Exception as e:
             get_exception('fetch_nasa_epic function', e)
-        shutil.rmtree(arguments['directory'])
+        try:
+            shutil.rmtree(arguments['directory'])
+        except Exception as e:
+            get_exception('fetch_nasa_epic function', e)
         try:
             time.sleep(int(os.environ['DELAY']))
         except KeyError:
