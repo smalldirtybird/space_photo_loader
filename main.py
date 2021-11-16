@@ -22,8 +22,12 @@ def big_file_compression(filepath, original_file_size, max_size):
     original_image = Image.open(filepath)
     print(get_file_size(filepath))
     original_width, original_height = original_image.size
-    requirement_resolution = (round(original_width * coefficient), round(original_height * coefficient))
-    requirement_image = original_image.resize(requirement_resolution, Image.ANTIALIAS)
+    requirement_resolution = (
+        round(original_width * coefficient),
+        round(original_height * coefficient)
+        )
+    requirement_image = original_image.resize(
+        requirement_resolution, Image.ANTIALIAS)
     requirement_image.save(filepath, optimize=True, quality=95)
     print(get_file_size(filepath))
 
@@ -35,7 +39,10 @@ def write_string_into_log(message):
 
 
 def get_exception(location, exception):
-    message = f'Exception of type {type(exception).__name__} occurred in {location}: {exception}'
+    message = f'''
+        Exception of type {type(exception).__name__}
+        occurred in {location}: {exception}
+        '''
     with open('log.txt', 'a') as logfile:
         time_stamp = datetime.datetime.now()
         logfile.write(f'{time_stamp}. {message}\n')
@@ -47,7 +54,7 @@ def get_image(url, path):
     response.raise_for_status()
     with open(path, 'wb') as file:
         file.write(response.content)
-    original_file_size =  get_file_size(path)
+    original_file_size = get_file_size(path)
     max_file_size = 20
     if original_file_size > max_file_size:
         big_file_compression(path, original_file_size, max_file_size)
@@ -150,13 +157,15 @@ def combine_nasa_epic_link(data, api_key):
 
 
 def get_nasa_epic_links(api_key, days_ago):
-    request_data = datetime.date.today() - datetime.timedelta(days=int(days_ago))
+    request_data = datetime.date.today() - datetime.timedelta(
+        days=int(days_ago))
     url = f'https://epic.gsfc.nasa.gov/api/natural/date/{request_data}'
     response = requests.get(url)
     response.raise_for_status()
     links = []
     for image_data in response.json():
-        date, time = str(datetime.datetime.fromisoformat(image_data['date'])).split(sep=' ')
+        date, time = str(
+            datetime.datetime.fromisoformat(image_data['date'])).split(sep=' ')
         year, month, day = date.split(sep='-')
         link = combine_nasa_epic_link(
             (image_data['image'], year, month, day), api_key)
