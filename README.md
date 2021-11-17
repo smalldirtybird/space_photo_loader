@@ -26,18 +26,14 @@ If you want to get different results, you can use optional arguments in console 
 Get available options with `-h` argument:
 ```
 D:\learning\python\api_services\space_photo_loader>python main.py -h
-usage: main.py [-h] [-l LAUNCH_NUMBER] [-c COUNT] [-d DAYS_AGO] [-dir DIRECTORY]
+usage: main.py [-h] [-c COUNT] [-dir DIRECTORY]
 
 Загрузка фото космоса от SpaceX и NASA в Телеграм-канал
 
 optional arguments:
   -h, --help            show this help message and exit
-  -l LAUNCH_NUMBER, --launch_number LAUNCH_NUMBER
-                        Номер запуска SpaseX
   -c COUNT, --count COUNT
                         Кол-во фотографий NASA APOD
-  -d DAYS_AGO, --days_ago DAYS_AGO
-                        Как давно сделаны фото NASA EPIC
   -dir DIRECTORY, --directory DIRECTORY
                         Путь к папке для скачанных картинок
 ```

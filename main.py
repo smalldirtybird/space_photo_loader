@@ -57,14 +57,15 @@ def get_image(url, path):
         big_file_compression(path, original_file_size, max_file_size)
 
 
-def get_random_flight_number():
+def get_latest_flight_number():
     flight_numbers = []
     url = 'https://api.spacexdata.com/v3/launches'
     response = requests.get(url)
     for flight in response.json():
-        flight_numbers.append(flight['flight_number'])
-    random_flight_number = random.choice(flight_numbers)
-    return random_flight_number
+        if len(flight['links']['flickr_images']) != 0:
+            flight_numbers.append(flight['flight_number'])
+    latest_flight_number = max(flight_numbers)
+    return latest_flight_number
 
 
 def get_spacex_links(launch_number):
@@ -85,10 +86,7 @@ def check_image_quantity(folder, folder_number):
 def fetch_spacex_last_launch(settings, token):
     spacex_folder = os.path.join(settings['directory'], 'spacex')
     filename = 'spacex'
-    flight_number = get_random_flight_number()
-    links = []
-    while len(links) == 0:
-        links = get_spacex_links(flight_number)
+    links = get_spacex_links(get_latest_flight_number())
     write_string_into_log(f'received {len(links)} spacex links')
     folder_number = 0
     for link_number, link in enumerate(links):
@@ -148,12 +146,18 @@ def combine_nasa_epic_link(data, api_key):
     return url_template
 
 
-def get_nasa_epic_links(api_key, days_ago):
-    request_data = datetime.date.today() - datetime.timedelta(
-        days=int(days_ago))
-    url = f'https://epic.gsfc.nasa.gov/api/natural/date/{request_data}'
-    response = requests.get(url)
-    response.raise_for_status()
+def get_nasa_epic_links(api_key):
+    days_ago = 0
+    response_elements = []
+    while len(response_elements) == 0:
+        request_data = datetime.date.today() - datetime.timedelta(
+            days=int(days_ago))
+        url = f'https://epic.gsfc.nasa.gov/api/natural/date/{request_data}'
+        response = requests.get(url)
+        response.raise_for_status()
+        response_elements = [
+            elm for elm in response.json() if len(response.json()) != 0]
+        days_ago += 1
     links = []
     for image_data in response.json():
         date, time = str(
@@ -168,7 +172,7 @@ def get_nasa_epic_links(api_key, days_ago):
 def fetch_nasa_epic(settings, api_key, token):
     nasa_epic_folder = os.path.join(settings['directory'], 'nasa_epic')
     filename = 'nasa_epic'
-    links = get_nasa_epic_links(api_key, settings['days_ago'])
+    links = get_nasa_epic_links(api_key)
     write_string_into_log(f'received {len(links)} epic links')
     folder_number = 0
     for link_number, link in enumerate(links):
@@ -200,22 +204,14 @@ def get_arguments():
     parser = argparse.ArgumentParser(
         description='Загрузка фото космоса от SpaceX и NASA в Телеграм-канал')
     parser.add_argument(
-        '-l', '--launch_number',
-        help='Номер запуска SpaseX')
-    parser.add_argument(
-        '-c', '--count', default=9,
+        '-c', '--count', default=10,
         help='Кол-во фотографий NASA APOD')
-    parser.add_argument(
-        '-d', '--days_ago', default=8,
-        help='Как давно сделаны фото NASA EPIC')
     parser.add_argument(
         '-dir', '--directory', default='images',
         help='Путь к папке для скачанных картинок')
     args = parser.parse_args()
     args_dict = {'directory': args.directory,
-                 'launch_number': args.launch_number,
-                 'image_quantity': args.count,
-                 'days_ago': args.days_ago
+                 'image_quantity': args.count
                  }
     return args_dict
 
@@ -242,7 +238,7 @@ if __name__ == '__main__':
         try:
             shutil.rmtree(arguments['directory'])
         except Exception as e:
-            get_exception('fetch_nasa_epic function', e)
+            get_exception('main block, shutil.rmtree', e)
         try:
             time.sleep(int(os.environ['DELAY']))
         except KeyError:
@@ -252,4 +248,4 @@ if __name__ == '__main__':
                 If need to set another delay value,
                 check README.md for instructions.
                 ''')
-            time.sleep(10)
+            time.sleep(86200)
