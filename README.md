@@ -1,9 +1,9 @@
 # Space photo loader
 
-Easy way to download some beautiful pictures from SpaceX and NASA
+Easy way to download some beautiful pictures from SpaceX and NASA.
 
 ## How to prepare:
-1. Make sure Python installed on your PC - you can get it from [official website](https://www.python.org/)
+1. Make sure Python installed on your PC - you can get it from [official website](https://www.python.org/).
 2. Install libraries with pip:
 ```
 pip3 install -r requirements.txt
