@@ -62,7 +62,7 @@ def get_latest_flight_number():
     url = 'https://api.spacexdata.com/v3/launches'
     response = requests.get(url)
     for flight in response.json():
-        if len(flight['links']['flickr_images']) != 0:
+        if len(flight['links']['flickr_images']):
             flight_numbers.append(flight['flight_number'])
     latest_flight_number = max(flight_numbers)
     return latest_flight_number
