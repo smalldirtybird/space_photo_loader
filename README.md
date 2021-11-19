@@ -13,19 +13,19 @@ Create .env file in directory with main.py file(use Notepad++) and add the strin
 ```
 NASA_TOKEN='your_nasa_api_token'
 ```
-to it instead of value in quotes (hereinafter quotes must be removed).
+to it instead of value in quotes. Here and further quotes must be removed.
 4. Create a Telegram bot which will post pictures to your own channel - just send message `/newbot` to [@BotFather](https://telegram.me/BotFather) and follow instructions.
 After bot will be created, get token from @BotFather and add to .env file:
 ```
 TELEGRAM_TOKEN='your_telegram_bot_token'
 ```
 Put your token instead of value in quotes.
-5. Create your Telegram channel (or use existing) and make your bot admin in it. The add a string like
+5. Create your Telegram channel (or use existing) and make your bot admin in it. Add the string
 ```
 TELEGRAM_CHAT_ID=@'YourChannelID'
 ```
 to .env file. Instead of `YourChannelID` put your channel id (`@` symbol is required).
-6. At least, add to .env file string:
+6. Add to .env file string:
 ```
 DELAY='time_of_delay_in_seconds
 ``` 
