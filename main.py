@@ -7,8 +7,8 @@ import argparse
 import telegram
 import time
 import shutil
-import random
 from PIL import Image
+import logging
 
 
 def get_file_size(filepath):
@@ -30,22 +30,6 @@ def big_file_compression(filepath, original_file_size, max_size):
     requirement_image.save(filepath, optimize=True, quality=95)
 
 
-def write_string_into_log(message):
-    with open('log.txt', 'a') as logfile:
-        time_stamp = datetime.datetime.now()
-        logfile.write(f'{time_stamp}. {message}\n')
-
-
-def get_exception(location, exception):
-    message = f'''
-        Exception of type {type(exception).__name__}
-        occurred in {location}: {exception}
-        '''
-    with open('log.txt', 'a') as logfile:
-        time_stamp = datetime.datetime.now()
-        logfile.write(f'{time_stamp}. {message}\n')
-
-
 def get_image(url, path):
     response = requests.get(url)
     response.raise_for_status()
@@ -58,14 +42,14 @@ def get_image(url, path):
 
 
 def get_latest_flight_number():
-    flight_numbers = []
     url = 'https://api.spacexdata.com/v3/launches'
     response = requests.get(url)
-    for flight in response.json():
+    flights = response.json()
+    flights.reverse()
+    for flight in flights:
         if len(flight['links']['flickr_images']):
-            flight_numbers.append(flight['flight_number'])
-    latest_flight_number = max(flight_numbers)
-    return latest_flight_number
+            break
+    return flight['flight_number']
 
 
 def get_spacex_links(launch_number):
@@ -87,7 +71,7 @@ def fetch_spacex_last_launch(settings, token):
     spacex_folder = os.path.join(settings['directory'], 'spacex')
     filename = 'spacex'
     links = get_spacex_links(get_latest_flight_number())
-    write_string_into_log(f'received {len(links)} spacex links')
+    logging.info(f'received {len(links)} spacex links')
     folder_number = 0
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
@@ -124,7 +108,7 @@ def fetch_nasa_apod(settings, api_key, token):
     nasa_apod_folder = os.path.join(settings['directory'], 'nasa_apod')
     filename = 'nasa_apod'
     links = get_nasa_apod_links(settings['image_quantity'], api_key)
-    write_string_into_log(f'received {len(links)} apod links')
+    logging.info(f'received {len(links)} apod links')
     folder_number = 0
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
@@ -160,9 +144,9 @@ def get_nasa_epic_links(api_key):
         days_ago += 1
     links = []
     for image_data in response.json():
-        date, time = str(
+        image_date, image_time = str(
             datetime.datetime.fromisoformat(image_data['date'])).split(sep=' ')
-        year, month, day = date.split(sep='-')
+        year, month, day = image_date.split(sep='-')
         link = combine_nasa_epic_link(
             (image_data['image'], year, month, day), api_key)
         links.append(link)
@@ -173,7 +157,7 @@ def fetch_nasa_epic(settings, api_key, token):
     nasa_epic_folder = os.path.join(settings['directory'], 'nasa_epic')
     filename = 'nasa_epic'
     links = get_nasa_epic_links(api_key)
-    write_string_into_log(f'received {len(links)} epic links')
+    logging.info(f'received {len(links)} epic links')
     folder_number = 0
     for link_number, link in enumerate(links):
         sub_folder, folder_number = check_image_quantity(
@@ -196,7 +180,7 @@ def post_to_telegram_channel(token, chat_id, folder):
                 media=open(image_path, 'rb'))
             media_group.append(media)
         bot.send_media_group(chat_id=chat_id, media=media_group)
-        write_string_into_log(f'{sub_folder_paths} successfully uploaded')
+        logging.info(f'{sub_folder_paths} successfully uploaded')
         time.sleep(60)
 
 
@@ -217,6 +201,10 @@ def get_arguments():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        filename='logs.log',
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(message)s')
     arguments = get_arguments()
     load_dotenv()
     nasa_api_key = os.environ['NASA_TOKEN']
@@ -225,24 +213,24 @@ if __name__ == '__main__':
     while True:
         try:
             fetch_spacex_last_launch(arguments, telegram_token)
-        except Exception as e:
-            get_exception('fetch_spacex_last_launch function', e)
+        except Exception:
+            logging.exception('fetch_spacex_last_launch')
         try:
             fetch_nasa_apod(arguments, nasa_api_key, telegram_token)
-        except Exception as e:
-            get_exception('fetch_nasa_apod function', e)
+        except Exception:
+            logging.exception('fetch_nasa_apod')
         try:
             fetch_nasa_epic(arguments, nasa_api_key, telegram_token)
-        except Exception as e:
-            get_exception('fetch_nasa_epic function', e)
+        except Exception:
+            logging.exception('fetch_nasa_epic')
         try:
             shutil.rmtree(arguments['directory'])
-        except Exception as e:
-            get_exception('main block, shutil.rmtree', e)
+        except Exception:
+            logging.exception('shutil.rmtree')
         try:
             time.sleep(int(os.environ['DELAY']))
         except KeyError:
-            write_string_into_log(f'''
+            logging.exception(f'''
                 Variable "DELAY" not found in .env file.
                 Default time of delay between script running is 24 hours.
                 If need to set another delay value,
