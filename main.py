@@ -169,5 +169,9 @@ if __name__ == '__main__':
             fetch_nasa_epic(image_folder, nasa_api_key)
         except Exception as e:
             logging.exception(e)
-        post_to_telegram_channel(telegram_token, telegram_chat_id, image_folder, int(os.environ['DELAY']))
+        post_to_telegram_channel(telegram_token,
+                                 telegram_chat_id,
+                                 image_folder,
+                                 int(os.environ['DELAY'])
+                                 )
         shutil.rmtree(image_folder)
