@@ -155,10 +155,11 @@ def post_to_telegram_channel(token, chat_id, folder, delay=86400):
     for image in images:
         filepath = os.path.join(folder, image)
         file_size = get_file_size(filepath)
-        if file_size < photo_size_limit:
-            bot.send_photo(chat_id=chat_id, photo=open(filepath, 'rb'))
-        else:
-            bot.send_document(chat_id=chat_id, document=open(filepath, 'rb'))
+        with open(filepath, 'rb') as file:
+            if file_size < photo_size_limit:
+                bot.send_photo(chat_id=chat_id, photo=file)
+            else:
+                bot.send_document(chat_id=chat_id, document=file)
         time.sleep(delay)
 
 
