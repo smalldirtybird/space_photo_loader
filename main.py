@@ -67,8 +67,8 @@ def check_image_quantity(folder, folder_number):
     return sub_folder, folder_number
 
 
-def fetch_spacex_last_launch(settings, token):
-    spacex_folder = os.path.join(settings['directory'], 'spacex')
+def fetch_spacex_last_launch(folder, chat_id, token):
+    spacex_folder = os.path.join(folder, 'spacex')
     filename = 'spacex'
     links = get_spacex_links(get_latest_flight_number())
     logging.info(f'received {len(links)} spacex links')
@@ -79,7 +79,7 @@ def fetch_spacex_last_launch(settings, token):
         path = os.path.join(sub_folder, f'{filename}{link_number}.jpg')
         get_image(link, path)
     post_to_telegram_channel(
-        token, settings['telegram_chat_id'], spacex_folder)
+        token, chat_id, spacex_folder)
 
 
 def get_nasa_apod_links(count_apod, api_key):
@@ -104,10 +104,10 @@ def get_image_extension(url):
     return extension
 
 
-def fetch_nasa_apod(settings, api_key, token):
-    nasa_apod_folder = os.path.join(settings['directory'], 'nasa_apod')
+def fetch_nasa_apod(folder, image_quantity, chat_id, api_key, token):
+    nasa_apod_folder = os.path.join(folder, 'nasa_apod')
     filename = 'nasa_apod'
-    links = get_nasa_apod_links(settings['image_quantity'], api_key)
+    links = get_nasa_apod_links(image_quantity, api_key)
     logging.info(f'received {len(links)} apod links')
     folder_number = 0
     for link_number, link in enumerate(links):
@@ -119,7 +119,7 @@ def fetch_nasa_apod(settings, api_key, token):
                                 f'{filename}{link_number}{image_extension}')
             get_image(link, path)
     post_to_telegram_channel(
-        token, settings['telegram_chat_id'], nasa_apod_folder)
+        token, chat_id, nasa_apod_folder)
 
 
 def combine_nasa_epic_link(data, api_key):
@@ -153,8 +153,8 @@ def get_nasa_epic_links(api_key):
     return links
 
 
-def fetch_nasa_epic(settings, api_key, token):
-    nasa_epic_folder = os.path.join(settings['directory'], 'nasa_epic')
+def fetch_nasa_epic(folder, chat_id, api_key, token):
+    nasa_epic_folder = os.path.join(folder, 'nasa_epic')
     filename = 'nasa_epic'
     links = get_nasa_epic_links(api_key)
     logging.info(f'received {len(links)} epic links')
@@ -165,7 +165,7 @@ def fetch_nasa_epic(settings, api_key, token):
         path = os.path.join(sub_folder, f'{filename}{link_number}.png')
         get_image(link, path)
     post_to_telegram_channel(
-        token, settings['telegram_chat_id'], nasa_epic_folder)
+        token, chat_id, nasa_epic_folder)
 
 
 def post_to_telegram_channel(token, chat_id, folder):
@@ -197,7 +197,7 @@ def get_arguments():
     args_dict = {'directory': args.directory,
                  'image_quantity': args.count
                  }
-    return args_dict
+    return args.directory, args.count
 
 
 if __name__ == '__main__':
@@ -205,26 +205,26 @@ if __name__ == '__main__':
         filename='logs.log',
         level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(message)s')
-    arguments = get_arguments()
+    image_folder, apod_photo_count = get_arguments()
     load_dotenv()
     nasa_api_key = os.environ['NASA_TOKEN']
     telegram_token = os.environ['TELEGRAM_TOKEN']
-    arguments['telegram_chat_id'] = os.environ['TELEGRAM_CHAT_ID']
+    telegram_chat_id = os.environ['TELEGRAM_CHAT_ID']
     while True:
         try:
-            fetch_spacex_last_launch(arguments, telegram_token)
+            fetch_spacex_last_launch(image_folder, telegram_chat_id, telegram_token)
         except Exception:
             logging.exception('fetch_spacex_last_launch')
         try:
-            fetch_nasa_apod(arguments, nasa_api_key, telegram_token)
+            fetch_nasa_apod(image_folder, apod_photo_count, telegram_chat_id, nasa_api_key, telegram_token)
         except Exception:
             logging.exception('fetch_nasa_apod')
         try:
-            fetch_nasa_epic(arguments, nasa_api_key, telegram_token)
+            fetch_nasa_epic(image_folder, telegram_chat_id, nasa_api_key, telegram_token)
         except Exception:
             logging.exception('fetch_nasa_epic')
         try:
-            shutil.rmtree(arguments['directory'])
+            shutil.rmtree(image_folder)
         except Exception:
             logging.exception('shutil.rmtree')
         try:
