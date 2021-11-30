@@ -68,8 +68,7 @@ def get_image_extension(url):
     parsed_url = urllib.parse.urlsplit(url, scheme='', allow_fragments=True)
     filepath = urllib.parse.unquote(parsed_url[2],
                                     encoding='utf-8', errors='replace')
-    path, filename = os.path.split(filepath)
-    name, extension = os.path.splitext(filename)
+    path, extension = os.path.splitext(filepath)
     return extension
 
 
@@ -84,32 +83,25 @@ def fetch_nasa_apod(folder, image_quantity, api_key):
             download_image(link, path)
 
 
-def combine_nasa_epic_link(image_id, year, month, day):
-    url = 'https://api.nasa.gov/EPIC/archive/natural'
-    url_template = f'{url}/{year}/{month}/{day}' \
-        f'/png/{image_id}.png'
-    return url_template
-
-
 def get_nasa_epic_links():
     days_ago = 0
     response_elements = []
     while not len(response_elements):
         date_for_url = datetime.date.today() - datetime.timedelta(
             days=int(days_ago))
-        url = f'https://epic.gsfc.nasa.gov/api/natural/date/{date_for_url}'
-        response = requests.get(url)
+        epic_url = f'https://epic.gsfc.nasa.gov/api/natural/date/{date_for_url}'
+        response = requests.get(epic_url)
         response.raise_for_status()
-        response_elements = [
-            elm for elm in response.json() if len(response.json())]
+        response_elements = response.json()
         days_ago += 1
     links = []
     for image in response.json():
-        image_date, image_time = str(
-            datetime.datetime.fromisoformat(image['date'])).split(sep=' ')
-        year, month, day = image_date.split(sep='-')
-        link = combine_nasa_epic_link(
-            image['image'], year, month, day)
+        image_id = image['image']
+        image_datetime = datetime.datetime.fromisoformat(image['date'])
+        image_date = image_datetime.strftime('%Y/%m/%d')
+        image_url = 'https://api.nasa.gov/EPIC/archive/natural'
+        link = f'{image_url}/{image_date}' \
+            f'/png/{image_id}.png'
         links.append(link)
     return links
 
@@ -165,8 +157,8 @@ if __name__ == '__main__':
     while True:
         os.makedirs(image_folder, exist_ok=True)
         try:
-            fetch_spacex_last_launch(image_folder)
-            fetch_nasa_apod(image_folder, apod_photo_count, nasa_api_key)
+            # fetch_spacex_last_launch(image_folder)
+            # fetch_nasa_apod(image_folder, apod_photo_count, nasa_api_key)
             fetch_nasa_epic(image_folder, nasa_api_key)
             post_to_telegram_channel(telegram_token,
                                      telegram_chat_id,
