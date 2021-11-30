@@ -35,7 +35,7 @@ Easy way to download some beautiful pictures from SpaceX and NASA.
 
 6. Add to .env file string:
     ```
-    DELAY='time_of_delay_in_seconds
+    DELAY='time_of_delay_in_seconds'
     ``` 
     Instead of value in quotes indicate time when script should be started again in seconds.
     Default delay value is 24 hours.
