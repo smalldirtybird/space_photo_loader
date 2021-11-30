@@ -89,7 +89,8 @@ def get_nasa_epic_links():
     while not len(response_elements):
         date_for_url = datetime.date.today() - datetime.timedelta(
             days=days_ago)
-        epic_url = f'https://epic.gsfc.nasa.gov/api/natural/date/{date_for_url}'
+        epic_url = f'https://epic.gsfc.nasa.gov/api/natural/date/' \
+            f'{date_for_url}'
         response = requests.get(epic_url)
         response.raise_for_status()
         response_elements = response.json()
@@ -157,8 +158,8 @@ if __name__ == '__main__':
     while True:
         os.makedirs(image_folder, exist_ok=True)
         try:
-            # fetch_spacex_last_launch(image_folder)
-            # fetch_nasa_apod(image_folder, apod_photo_count, nasa_api_key)
+            fetch_spacex_last_launch(image_folder)
+            fetch_nasa_apod(image_folder, apod_photo_count, nasa_api_key)
             fetch_nasa_epic(image_folder, nasa_api_key)
             post_to_telegram_channel(telegram_token,
                                      telegram_chat_id,
