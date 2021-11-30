@@ -17,16 +17,17 @@ def get_file_size(filepath):
     return size_in_megabytes
 
 
-def get_image(url, path):
+def download_image(url, path):
     response = requests.get(url)
     response.raise_for_status()
     with open(path, 'wb') as file:
         file.write(response.content)
 
 
-def get_latest_flight_number():
+def get_number_of_latest_flight_with_images():
     url = 'https://api.spacexdata.com/v3/launches'
     response = requests.get(url)
+    response.raise_for_status()
     flights = response.json()
     flights.reverse()
     for flight in flights:
@@ -44,10 +45,10 @@ def get_spacex_links(launch_number):
 
 def fetch_spacex_last_launch(folder):
     filename = 'spacex'
-    links = get_spacex_links(get_latest_flight_number())
+    links = get_spacex_links(get_number_of_latest_flight_with_images())
     for link_number, link in enumerate(links):
         path = os.path.join(folder, f'{filename}{link_number}.jpg')
-        get_image(link, path)
+        download_image(link, path)
 
 
 def get_nasa_apod_links(count_apod, api_key):
@@ -80,7 +81,7 @@ def fetch_nasa_apod(folder, image_quantity, api_key):
         if image_extension:
             path = os.path.join(folder,
                                 f'{filename}{link_number}{image_extension}')
-            get_image(link, path)
+            download_image(link, path)
 
 
 def combine_nasa_epic_link(data, api_key):
@@ -119,7 +120,7 @@ def fetch_nasa_epic(folder, api_key):
     links = get_nasa_epic_links(api_key)
     for link_number, link in enumerate(links):
         path = os.path.join(folder, f'{filename}{link_number}.png')
-        get_image(link, path)
+        download_image(link, path)
 
 
 def post_to_telegram_channel(token, chat_id, folder, delay=86400):
