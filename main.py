@@ -168,11 +168,16 @@ if __name__ == '__main__':
             fetch_spacex_last_launch(image_folder)
             fetch_nasa_apod(image_folder, apod_photo_count, nasa_api_key)
             fetch_nasa_epic(image_folder, nasa_api_key)
-        except Exception as e:
+            post_to_telegram_channel(telegram_token,
+                                     telegram_chat_id,
+                                     image_folder,
+                                     int(os.environ['DELAY'])
+                                     )
+        except requests.exceptions.ConnectionError as e:
             logging.exception(e)
-        post_to_telegram_channel(telegram_token,
-                                 telegram_chat_id,
-                                 image_folder,
-                                 int(os.environ['DELAY'])
-                                 )
-        shutil.rmtree(image_folder)
+        except requests.exceptions.HTTPError as e:
+            logging.exception(e)
+        except telegram.error.NetworkError as e:
+            logging.exception(e)
+        finally:
+            shutil.rmtree(image_folder)
