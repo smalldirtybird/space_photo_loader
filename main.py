@@ -17,8 +17,8 @@ def get_file_size(filepath):
     return size_in_megabytes
 
 
-def download_image(url, path):
-    response = requests.get(url)
+def download_image(url, path, params=None):
+    response = requests.get(url, params=params)
     response.raise_for_status()
     with open(path, 'wb') as file:
         file.write(response.content)
@@ -84,14 +84,14 @@ def fetch_nasa_apod(folder, image_quantity, api_key):
             download_image(link, path)
 
 
-def combine_nasa_epic_link(image_id, year, month, day, api_key):
+def combine_nasa_epic_link(image_id, year, month, day):
     url = 'https://api.nasa.gov/EPIC/archive/natural'
     url_template = f'{url}/{year}/{month}/{day}' \
-        f'/png/{image_id}.png?api_key={api_key}'
+        f'/png/{image_id}.png'
     return url_template
 
 
-def get_nasa_epic_links(api_key):
+def get_nasa_epic_links():
     days_ago = 0
     response_elements = []
     while not len(response_elements):
@@ -109,17 +109,18 @@ def get_nasa_epic_links(api_key):
             datetime.datetime.fromisoformat(image['date'])).split(sep=' ')
         year, month, day = image_date.split(sep='-')
         link = combine_nasa_epic_link(
-            image['image'], year, month, day, api_key)
+            image['image'], year, month, day)
         links.append(link)
     return links
 
 
 def fetch_nasa_epic(folder, api_key):
     filename = 'nasa_epic'
-    links = get_nasa_epic_links(api_key)
+    links = get_nasa_epic_links()
+    params = {'api_key': api_key}
     for link_number, link in enumerate(links):
         path = os.path.join(folder, f'{filename}{link_number}.png')
-        download_image(link, path)
+        download_image(link, path, params)
 
 
 def post_to_telegram_channel(token, chat_id, folder, delay=86400):
