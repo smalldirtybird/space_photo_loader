@@ -88,7 +88,7 @@ def get_nasa_epic_links():
     response_elements = []
     while not len(response_elements):
         date_for_url = datetime.date.today() - datetime.timedelta(
-            days=int(days_ago))
+            days=days_ago)
         epic_url = f'https://epic.gsfc.nasa.gov/api/natural/date/{date_for_url}'
         response = requests.get(epic_url)
         response.raise_for_status()
