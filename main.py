@@ -51,16 +51,16 @@ def fetch_spacex_last_launch(folder):
         download_image(link, path)
 
 
-def get_nasa_apod_links(count_apod, api_key):
+def get_nasa_apod_links(count, api_key):
     url = 'https://api.nasa.gov/planetary/apod?'
-    params = {'count': count_apod,
+    params = {'count': count,
               'api_key': api_key}
     response = requests.get(url, params=params)
     response.raise_for_status()
     nasa_links = []
-    for image_data in response.json():
-        if image_data['media_type'] == 'image':
-            nasa_links.append(image_data['url'])
+    for image in response.json():
+        if image['media_type'] == 'image':
+            nasa_links.append(image['url'])
     return nasa_links
 
 
@@ -84,8 +84,7 @@ def fetch_nasa_apod(folder, image_quantity, api_key):
             download_image(link, path)
 
 
-def combine_nasa_epic_link(data, api_key):
-    image_id, year, month, day = data
+def combine_nasa_epic_link(image_id, year, month, day, api_key):
     url = 'https://api.nasa.gov/EPIC/archive/natural'
     url_template = f'{url}/{year}/{month}/{day}' \
         f'/png/{image_id}.png?api_key={api_key}'
@@ -96,21 +95,21 @@ def get_nasa_epic_links(api_key):
     days_ago = 0
     response_elements = []
     while not len(response_elements):
-        request_data = datetime.date.today() - datetime.timedelta(
+        date_for_url = datetime.date.today() - datetime.timedelta(
             days=int(days_ago))
-        url = f'https://epic.gsfc.nasa.gov/api/natural/date/{request_data}'
+        url = f'https://epic.gsfc.nasa.gov/api/natural/date/{date_for_url}'
         response = requests.get(url)
         response.raise_for_status()
         response_elements = [
             elm for elm in response.json() if len(response.json())]
         days_ago += 1
     links = []
-    for image_data in response.json():
+    for image in response.json():
         image_date, image_time = str(
-            datetime.datetime.fromisoformat(image_data['date'])).split(sep=' ')
+            datetime.datetime.fromisoformat(image['date'])).split(sep=' ')
         year, month, day = image_date.split(sep='-')
         link = combine_nasa_epic_link(
-            (image_data['image'], year, month, day), api_key)
+            image['image'], year, month, day, api_key)
         links.append(link)
     return links
 
