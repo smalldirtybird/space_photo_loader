@@ -32,8 +32,7 @@ def get_number_of_latest_flight_with_images():
     flights.reverse()
     for flight in flights:
         if len(flight['links']['flickr_images']):
-            break
-    return flight['flight_number']
+            return flight['flight_number']
 
 
 def get_spacex_links(launch_number):
@@ -89,7 +88,7 @@ def get_nasa_epic_links():
     while not len(response_elements):
         date_for_url = datetime.date.today() - datetime.timedelta(
             days=days_ago)
-        epic_url = f'https://epic.gsfc.nasa.gov/api/natural/date/' \
+        epic_url = 'https://epic.gsfc.nasa.gov/api/natural/date/' \
             f'{date_for_url}'
         response = requests.get(epic_url)
         response.raise_for_status()
@@ -166,11 +165,9 @@ if __name__ == '__main__':
                                      image_folder,
                                      int(os.environ['DELAY'])
                                      )
-        except requests.exceptions.ConnectionError as e:
-            logging.exception(e)
-        except requests.exceptions.HTTPError as e:
-            logging.exception(e)
-        except telegram.error.NetworkError as e:
-            logging.exception(e)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError,
+                telegram.error.NetworkError) as error:
+            logging.exception(error)
         finally:
             shutil.rmtree(image_folder)
